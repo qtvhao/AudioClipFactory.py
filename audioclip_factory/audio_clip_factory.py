@@ -115,15 +115,15 @@ class AudioClipFactory:
             audio_clip.write_audiofile(output_file)
     
     @staticmethod
-    def merge_speech_with_music(speech_path: str, music_path: str) -> Union[CompositeAudioClip, None]:
+    def merge_speech_with_music(speech_path: str, music_path: str, speech_volume: float = 1.0, music_volume: float = 0.5) -> Union[CompositeAudioClip, None]:
         """
-        Processes and merges speech and background music.
+        Processes and merges speech and background music with customizable volume levels.
         """
         speech_asset = {
             "parameters": {"url": speech_path},
             "actions": [
                 {"type": "normalize_music"},
-                {"type": "volume_percentage", "param": 1.0}
+                {"type": "volume_percentage", "param": speech_volume}
             ]
         }
         
@@ -137,7 +137,7 @@ class AudioClipFactory:
             "actions": [
                 {"type": "normalize_music"},
                 {"type": "loop_background_music", "param": speech_clip.duration},
-                {"type": "volume_percentage", "param": 0.5}
+                {"type": "volume_percentage", "param": music_volume}
             ]
         }
         
