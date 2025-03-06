@@ -32,15 +32,38 @@ class AudioClipFactory:
         """
         for action in actions:
             if action['type'] == 'normalize_music':
-                clip = clip.with_effects([afx.AudioNormalize()])
+                clip = AudioClipFactory.normalize_music(clip)
             elif action['type'] == 'loop_background_music':
-                target_duration = action['param']
-                start = clip.duration * 0.15
-                clip = clip.subclipped(start)
-                clip = clip.with_effects([afx.AudioLoop(duration=target_duration)])
+                clip = AudioClipFactory.loop_background_music(clip, action['param'])
             elif action['type'] == 'volume_percentage':
-                clip = clip.with_effects([afx.MultiplyVolume(action['param'])])
+                clip = AudioClipFactory.adjust_volume(clip, action['param'])
         return clip
+    
+    @staticmethod
+    def normalize_music(clip: AudioFileClip) -> AudioFileClip:
+        """Applies normalization to the audio clip."""
+        return clip.with_effects([afx.AudioNormalize()])
+    
+    @staticmethod
+    def loop_background_music(clip: AudioFileClip, target_duration: float) -> AudioFileClip:
+        """Loops the background music to match a target duration, adjusting volume if too loud."""
+        start = clip.duration * 0.15
+        clip = clip.subclipped(start, clip.duration)
+        clip = clip.with_effects([afx.AudioLoop(duration=target_duration)])
+        
+        # Automatically adjust volume if it's too loud
+        max_volume_threshold = 0.8  # Define a reasonable threshold
+        detected_volume = clip.max_volume()
+        if detected_volume > max_volume_threshold:
+            volume_factor = max_volume_threshold / detected_volume
+            clip = AudioClipFactory.adjust_volume(clip, volume_factor)
+        
+        return clip
+    
+    @staticmethod
+    def adjust_volume(clip: AudioFileClip, factor: float) -> AudioFileClip:
+        """Adjusts the volume of the audio clip by a given factor."""
+        return clip.with_effects([afx.MultiplyVolume(factor)])
     
     @staticmethod
     def merge_audio_clips(audio_clips: List[AudioFileClip]) -> Union[CompositeAudioClip, None]:
