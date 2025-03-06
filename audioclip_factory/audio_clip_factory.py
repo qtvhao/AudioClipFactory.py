@@ -2,6 +2,7 @@ from moviepy import AudioFileClip
 from moviepy import CompositeAudioClip
 from moviepy import afx
 from typing import Dict, Any, List, Union
+import tempfile
 
 class AudioClipFactory:
     """
@@ -112,3 +113,42 @@ class AudioClipFactory:
             audio_clip.write_audiofile(output_file, logger=logger)
         else:
             audio_clip.write_audiofile(output_file)
+    
+    @staticmethod
+    def merge_speech_with_music(speech_path: str, music_path: str) -> Union[CompositeAudioClip, None]:
+        """
+        Processes and merges speech and background music.
+        """
+        speech_asset = {
+            "parameters": {"url": speech_path},
+            "actions": [
+                {"type": "normalize_music"},
+                {"type": "volume_percentage", "param": 1.0}
+            ]
+        }
+        
+        speech_clip = AudioClipFactory.create_audio_clip(speech_asset)
+        if not speech_clip:
+            print("❌ Error: Could not load speech file.")
+            return None
+        
+        music_asset = {
+            "parameters": {"url": music_path},
+            "actions": [
+                {"type": "normalize_music"},
+                {"type": "loop_background_music", "param": speech_clip.duration},
+                {"type": "volume_percentage", "param": 0.5}
+            ]
+        }
+        
+        music_clip = AudioClipFactory.create_audio_clip(music_asset)
+        merged_clip = AudioClipFactory.merge_audio_clips([music_clip, speech_clip]) if music_clip else None
+        
+        if merged_clip:
+            output_path = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3').name
+            AudioClipFactory.save_audio_clip(merged_clip, output_path)
+            print(f"✅ Audio merged and saved as {output_path}")
+            return AudioFileClip(output_path)
+        else:
+            print("❌ Error: No valid audio clips to merge.")
+            return None
