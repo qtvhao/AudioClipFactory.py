@@ -3,6 +3,7 @@ from moviepy import CompositeAudioClip
 from moviepy import afx
 from typing import Dict, Any, List, Union
 import tempfile
+from pydub import AudioSegment
 
 class AudioClipFactory:
     """
@@ -119,6 +120,13 @@ class AudioClipFactory:
         """
         Processes and merges speech and background music with customizable volume levels.
         """
+        if not speech_path.lower().endswith('.mp3'):
+            temp_speech_path = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3').name
+            audio: AudioSegment = AudioSegment.from_file(speech_path)
+            audio.export(temp_speech_path, format='mp3')
+            speech_path = temp_speech_path
+            print(f"🔄 Converted speech file to MP3: {speech_path}")
+        
         speech_asset = {
             "parameters": {"url": speech_path},
             "actions": [
