@@ -17,13 +17,9 @@ class AudioClipFactory:
         :param audio_asset: Dictionary containing audio asset parameters.
         :return: Processed AudioFileClip.
         """
-        try:
-            clip = AudioFileClip(audio_asset['parameters']['url'])
-            print("🎵 Successfully loaded audio file.")
-            return AudioClipFactory.apply_audio_effects(clip, audio_asset.get('actions', []))
-        except Exception as e:
-            print(f"❌ Error loading audio file {audio_asset['parameters']['url']}: {str(e)}")
-            return None
+        clip = AudioFileClip(audio_asset['parameters']['url'])
+        print("🎵 Successfully loaded audio file.")
+        return AudioClipFactory.apply_audio_effects(clip, audio_asset.get('actions', []))
     
     @staticmethod
     def apply_audio_effects(clip: AudioFileClip, actions: List[Dict[str, Any]]) -> AudioFileClip:
